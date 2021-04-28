@@ -20,8 +20,8 @@ def sendmsg(contact,message):
     # Send contact number in search box
     person_title.send_keys(contact)
     
-    # Wait for 2 seconds to search contact number
-    time.sleep(2)
+    # Wait for 4 seconds to search contact number
+    time.sleep(4)
 
     try:
         # Load error message in case unavailability of contact number
@@ -50,14 +50,13 @@ def sendvid(contact, path):
     # Send contact number in search box
     person_title.send_keys(contact)
     
-    # Wait for 2 seconds to search contact number
-    time.sleep(2)
+    # Wait for 4 seconds to search contact number
+    time.sleep(4)
 
     try:
         # Load error message in case unavailability of contact number
         element = driver.find_element_by_xpath('//*[@id="pane-side"]/div[1]/div/span')
     except NoSuchElementException:
-        # Format the message from excel sheet
         person_title.send_keys(Keys.ENTER)
         # Find and click the attach button
         attachment_box = driver.find_element_by_xpath('//div[@title = "Attach"]')
@@ -120,9 +119,10 @@ if msgtyp == 'v':
         contact = str(int(excel_data['Contact'][count]))
         sendvid(contact,path)
         count = count + 1
+        time.sleep(2)
     # This time is dependent on the size of the file that you are sharing
-    print("Leaving the page open for an additional 30 seconds so that files upload.")
-    time.sleep(30) 
+    print("Leaving the page open for an additional 10 seconds so that files upload.")
+    time.sleep(10) 
 
 # Close chrome browser
 driver.quit()
