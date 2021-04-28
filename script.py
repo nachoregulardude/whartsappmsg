@@ -74,6 +74,7 @@ def sendvid(contact, path):
         # Hit the send button
         send_button = driver.find_element_by_xpath('//span[@data-icon="send"]')
         send_button.click()
+
         print("Message succesfully sent to ", column)
         print(count, " messages sent.")
     
@@ -119,6 +120,9 @@ if msgtyp == 'v':
         contact = str(int(excel_data['Contact'][count]))
         sendvid(contact,path)
         count = count + 1
+    # This time is dependent on the size of the file that you are sharing
+    print("Leaving the page open for an additional 30 seconds so that files upload.")
+    time.sleep(30) 
 
 # Close chrome browser
 driver.quit()
