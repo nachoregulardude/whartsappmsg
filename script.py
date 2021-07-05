@@ -145,9 +145,8 @@ if msgtyp.lower() == 't':
 if msgtyp.lower() == 'v':
     # Take input for path to video
     print("The video must be in the same folder as the program.")
-    print("\nThese are the videos/photos in the folder: \n\n")
+    print("\nThese are the videos/photos in the folder: \n")
     files=getoutput("ls -1 | grep -E '.mp4|.3gp|.jpg|.png|.jpeg'")
-    print(files)
     filelist=files.splitlines()
     if len(filelist)==1:
         correct='1'
@@ -156,28 +155,28 @@ if msgtyp.lower() == 'v':
         path+= os.path.dirname(os.path.realpath(__file__))+'/'
         path+=filename
         input('{} \nPress Enter if the path is correct...'.format(path))
-#    else:
-#        no=0
-#        for file in filelist:
-#            filelist[n] = '{}. '.format(no) + filelist[n] 
-#            no = no + 1
-#        print(filelist)
-    while correct=='0':
-        filename = input("\nEnter the filename: ")
-        path=''
-        path+= os.path.dirname(os.path.realpath(__file__))+'/'
-        path+=filename
-        if filename not in filelist:   
-            print("Please enter the correct file name")
-            print(files)
-            continue
-        correct=input('{} \nPress Enter if the path is correct'.format(path))
-        print("Enter 0 to change filename: ")
+    else:
+        no=1
+        for files in filelist:
+            print("{}. {}".format(no, files))
+            no=no+1
+        choice=int(0)
+        while not choice:
+            choice=int(input("Enter the number: "))
+            if choice>int(len(filelist))+1:
+               continue
+        while correct==0:
+            filename=filelist[choice-1]
+            path=''
+            path+= os.path.dirname(os.path.realpath(__file__))+'/'
+            path+=filename
+            correct=input('{} \nPress Enter if the path is correct.'.format(path))
+            print("Enter 0 to change filename: ")
     # load = int(input("Enter a time(s) load: "))
     print("The video or photo will be loaded from:\n{}\n".format(path))
     if_text = input("\n\nEnter 1 if you want to send text with the video\n      0 if no\n :")
     if if_text=='1':
-        input("The text sent will be copied from the clipboard.\nPress Enter when the text is copied...")
+        input("The text sent will be copied from the clipboard.\nPress Enter when the text has been copied to the clipboard...")
     # Iterate excel rows till to finish
     for column in excel_data['Name'].tolist():
         # Stop once it reaches first nan value
