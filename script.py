@@ -8,6 +8,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.common.exceptions import NoSuchElementException
+from colorama import Fore, Style, Back
 import pandas
 import time
 
@@ -103,37 +104,37 @@ def sendvid(contact, path, if_text):
         actions.perform()
 
 # Load the chrome driver
-print("Opening Chrome...\n")
+print(Fore.RED + "Opening Chrome...")
 driver = webdriver.Chrome(executable_path='/usr/local/bin/chromedriver')
 count = 0
 
 # Open WhatsApp URL in chrome browser
-print("Going to WhatsApp web...\n")
+print(Fore.YELLOW + "Going to WhatsApp web...")
 driver.get("https://web.whatsapp.com/")
 wait = WebDriverWait(driver, 20)
 
 # Read data from excel
-print("Reading excel data...\n")
+print(Fore.BLUE + "Reading excel data...")
 excel_data = pandas.read_excel('Customer.xlsx', sheet_name='Customers')
 
 # User choses between sending a text message or a video message
-print('\n\nv: Video/Photo \nt: Text message')
+print(Style.DIM + '\nv: Video/Photo \nt: Text message')
 msgtyp=''
 while not msgtyp:
-    msgtyp = input("Enter the kind of message you want to send(v/t): ")
+    msgtyp = input(Style.RESET_ALL + Fore.BLUE + "Enter the kind of message you want to send(v/t): ")
 fromwhere=''
 if_text=''
 correct='0'
 if msgtyp.lower() == 't':
     while not fromwhere:
-        fromwhere = input("Enter 0 to send Message from the Spreadsheet\n      1 to send Message from Clipboard\n:")
+        fromwhere = input("Enter\t0 to send Message from the Spreadsheet\n\t1 to send Message from Clipboard\n:")
     if fromwhere==1:
-        input("The text sent will be copied from the clipboard.\nPress Enter when the text is copied: ")
+        input(Style.RESET_ALL + "The text sent will be copied from the clipboard.\nPress Enter when the text is copied: ")
     # Iterate excel rows till to finish
     for column in excel_data['Name'].tolist():
         # Stop once it reaches first nan value
         if excel_data['Name'].isnull()[count]:
-            print("Job completed.")
+            print(Back.GREEN + Fore.BLACK + "Job completed.")
             break
         # Assign customized message
         message = excel_data['Message'][0]
@@ -141,11 +142,12 @@ if msgtyp.lower() == 't':
         contact = str(int(excel_data['Contact'][count]))
         sendmsg(contact, message, fromwhere)
         count = count + 1
+    print(Style.RESET_ALL)
     time.sleep(3)
 if msgtyp.lower() == 'v':
     # Take input for path to video
     print("The video must be in the same folder as the program.")
-    print("\nThese are the videos/photos in the folder: \n")
+    print("\nThese are the videos/photos in the folder:")
     files=getoutput("ls -1 | grep -E '.mp4|.3gp|.jpg|.png|.jpeg'")
     filelist=files.splitlines()
     if len(filelist)==1:
@@ -165,16 +167,14 @@ if msgtyp.lower() == 'v':
             choice=int(input("Enter the number: "))
             if choice>int(len(filelist))+1:
                continue
-        while correct==0:
+        while correct=='0':
             filename=filelist[choice-1]
-            path=''
-            path+= os.path.dirname(os.path.realpath(__file__))+'/'
-            path+=filename
-            correct=input('{} \nPress Enter if the path is correct.'.format(path))
-            print("Enter 0 to change filename: ")
+            path= os.getcwd()+'/'+ filename
+            correct=input(Style.RESET_ALL + '\n{} \nPress Enter if the path is correct.'.format(path))
+            # print("Enter 0 to change filename: ")                                                          YO check this thing once. Not sure what its for
     # load = int(input("Enter a time(s) load: "))
-    print("The video or photo will be loaded from:\n{}\n".format(path))
-    if_text = input("\n\nEnter 1 if you want to send text with the video\n      0 if no\n :")
+    print(Fore.YELLOW + "The video or photo will be loaded from:\n{}\n".format(path))
+    if_text = input(Style.RESET_ALL + "\n\nEnter 1 if you want to send text with the video\n      0 if no\n :")
     if if_text=='1':
         input("The text sent will be copied from the clipboard.\nPress Enter when the text has been copied to the clipboard...")
     # Iterate excel rows till to finish
@@ -182,7 +182,7 @@ if msgtyp.lower() == 'v':
         # Stop once it reaches first nan value
 
         if excel_data['Name'].isnull()[count]:
-            print("Job completed.")
+            print(Back.GREEN + Fore.BLACK + "Job completed.")
             break
         # Assign customized message
         contact = str(int(excel_data['Contact'][count]))
@@ -190,8 +190,7 @@ if msgtyp.lower() == 'v':
         count = count + 1
         time.sleep(2)
     # This time is dependent on the size of the file that you are sharing
-    input(
-        "Press Enter when all videos have been uploaded...")
-
+    input("Press Enter when all videos have been uploaded...")
+    print(Style.RESET_ALL)
 # Close chrome browser
 driver.quit()
