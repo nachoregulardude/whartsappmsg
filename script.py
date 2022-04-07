@@ -1,3 +1,5 @@
+
+#!/usr/bin/python
 # Program to send bulk customized messages/videos through the WhatsApp web application
 # Code by Bharath G in collaboration with Suhail Ahmed
 
@@ -5,6 +7,7 @@ import os
 from subprocess import getoutput
 from selenium import webdriver
 from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.common.exceptions import NoSuchElementException
@@ -16,17 +19,17 @@ import time
 def sendmsg(contact, message, fromwhere):
     # Locate search box through x_path
     search_box = '//*[@id="side"]/div[1]/div/label/div/div[2]'
-    time.sleep(0.35)
+    
     person_title = wait.until(
         lambda driver: driver.find_element_by_xpath(search_box))
-
+    time.sleep(0.35)
     # Clear search box if any contact number is written in it
     person_title.clear()
 
     # Send contact number in search box
     person_title.send_keys(contact)
 
-    # Wait for 4 seconds to search contact number
+    # Wait for some seconds to search contact number
     time.sleep(0.35)
 
     try:
@@ -34,8 +37,9 @@ def sendmsg(contact, message, fromwhere):
         element = driver.find_element_by_xpath(
             '//*[@id="pane-side"]/div[1]/div/span')
     except NoSuchElementException:
+        print("Sending message to ", column)
         # Format the message from excel the sheet
-        time.sleep(0.1)
+        time.sleep(0.3)
         person_title.send_keys(Keys.ENTER)
         actions = ActionChains(driver)
         # Whether you want the message to be copied from the clipboard or the Spreadsheet
@@ -46,10 +50,16 @@ def sendmsg(contact, message, fromwhere):
                 message = message.replace('{customer_car}', car)
             if '{customer_name}' in message:
                 message = message.replace('{customer_name}', column)
-            actions.send_keys(message)
+            for word in message:
+                if word=='|':
+                    actions.key_down(Keys.SHIFT).key_down(Keys.ENTER).key_up(Keys.SHIFT).key_up(Keys.ENTER)
+                    continue
+
+                actions.send_keys(word)
+
+        time.sleep(0.1)
         actions.send_keys(Keys.ENTER)
         time.sleep(0.2)
-        print("Sending message to ", column)
         print(count+1, " messages sent.")
         actions.perform()
 
@@ -105,7 +115,8 @@ def sendvid(contact, path, if_text):
 
 # Load the chrome driver
 print(Fore.RED + "Opening Chrome...")
-driver = webdriver.Chrome(executable_path='/usr/local/bin/chromedriver')
+s = Service('chromedriver.exe')
+driver = webdriver.Chrome(service=s)
 count = 0
 
 # Open WhatsApp URL in chrome browser
@@ -118,9 +129,10 @@ print(Fore.BLUE + "Reading excel data...")
 excel_data = pandas.read_excel('Customer.xlsx', sheet_name='Customers')
 
 # User choses between sending a text message or a video message
-print(Style.DIM + '\nv: Video/Photo \nt: Text message')
+print(Style.DIM + '\n\nv: Video/Photo \nt: Text message')
 msgtyp=''
-while not msgtyp:
+valid_msg = ['v', 't']
+while msgtyp not in valid_msg:
     msgtyp = input(Style.RESET_ALL + Fore.BLUE + "Enter the kind of message you want to send(v/t): ")
 fromwhere=''
 if_text=''
@@ -138,7 +150,6 @@ if msgtyp.lower() == 't':
             break
         # Assign customized message
         message = excel_data['Message'][0]
-#        car = excel_data['Car'][count]
         contact = str(int(excel_data['Contact'][count]))
         sendmsg(contact, message, fromwhere)
         count = count + 1
@@ -148,13 +159,19 @@ if msgtyp.lower() == 'v':
     # Take input for path to video
     print("The video must be in the same folder as the program.")
     print("\nThese are the videos/photos in the folder:")
-    files=getoutput("ls -1 | grep -E '.mp4|.3gp|.jpg|.png|.jpeg'")
-    filelist=files.splitlines()
-    if len(filelist)==1:
+
+    #files=getoutput("ls -1 | grep -E '.mp4|.3gp|.jpg|.png|.jpeg'")
+    #filelist=files.splitlines()
+    fileExt =  ['.mp4','.3gp','.jpg','.png','.jpeg']
+    filelist = [x for x in os.listdir(os.getcwd()) if x.endswith(tuple(fileExt))]
+    
+    if len(filelist)==0:
+        print(f'Please ensure that the media files are of the specified extensions and are int {os.getcwd()} path \n{fileExt} ')
+    elif len(filelist)==1:
         correct='1'
         filename=filelist[0]
         path=''
-        path+= os.path.dirname(os.path.realpath(__file__))+'/'
+        path+= os.path.dirname(os.path.realpath(__file__))+'\\'
         path+=filename
         input('{} \nPress Enter if the path is correct...'.format(path))
     else:
@@ -162,12 +179,13 @@ if msgtyp.lower() == 'v':
         for files in filelist:
             print("{}. {}".format(no, files))
             no=no+1
-        choice=int(0)
+        choice=0
         while not choice:
-            choice=int(input("Enter the number: "))
+            choice=int(input("Enter a to send all the listed media\nEnter the number: "))
             if choice>int(len(filelist))+1:
-               continue
-        while correct=='0':
+                choice = 0
+                continue
+        while correct=='0' and choice!='a':
             filename=filelist[choice-1]
             path= os.getcwd()+'/'+ filename
             correct=input(Style.RESET_ALL + '\n{} \nPress Enter if the path is correct.'.format(path))
@@ -186,7 +204,12 @@ if msgtyp.lower() == 'v':
             break
         # Assign customized message
         contact = str(int(excel_data['Contact'][count]))
-        sendvid(contact, path, if_text)
+        if choice=='a':
+            for filename in filelist:
+               path= os.getcwd()+'/'+ filename 
+        else:
+            sendvid(contact, path, if_text)
+
         count = count + 1
         time.sleep(2)
     # This time is dependent on the size of the file that you are sharing
